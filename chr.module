@@ -331,25 +331,3 @@ function curl_http_request($url, array $options = array()) {
   curl_close($ch);
   return $result;
 }
-
-// Sample system wide proxy configuration. To be added to your settings.php.
-// The same array structure is to be used when overriding these settings
-// using 'http_proxy' and 'https_proxy' options in the curl_http_request().
-
-/**
- * External access proxy settings:
- *
- * If your site must access the Internet via a web proxy then you can enter
- * the proxy settings here. Currently only basic authentication is supported
- * by using the username and password variables. The 'exceptions' variable
- * is an array of host names to be accessed directly, not via proxy.
- */
-/* $conf['http_proxy'] = array(
-  'server' => 'your.proxy.com',
-  'port' => '8080',
-  'username' => 'user',
-  'password' => 'pass',
-  'exceptions' => array(),
-); */
-
-/* $conf['https_proxy'] = $conf['http_proxy']; */
