@@ -208,10 +208,15 @@ function curl_http_request($url, array $options = array()) {
   $result->error = curl_error($ch);
   $result->errno = curl_errno($ch);
 
-  // Request timed out.
-  if (CURLE_OPERATION_TIMEOUTED == $result->errno) {
-    $result->code = HTTP_REQUEST_TIMEOUT;
-    $result->error = 'request timed out';
+  // If there's been an error, do not continue.
+  if ($result->error) {
+    // Request timed out.
+    if (CURLE_OPERATION_TIMEOUTED == $result->errno) {
+      $result->code = HTTP_REQUEST_TIMEOUT;
+      $result->error = 'request timed out';
+      return $result;
+    }
+    $result->code = $result->errno;
     return $result;
   }
 
@@ -225,11 +230,15 @@ function curl_http_request($url, array $options = array()) {
   // Be tolerant of malformed HTTP responses that separate header and body with
   // \n\n or \r\r instead of \r\n\r\n.
   list($response, $result->data) = preg_split("/\r\n\r\n|\n\n|\r\r/", $result->data, 2);
-  if (('https' == $uri['scheme']) && (!empty($proxy))) {
+
+  // Sometimes when making an HTTP request via proxy using cURL, you end up with a double set of headers:
+  // one from the web server being the actual target, one from the proxy itself.
+  // The following if statement is to check for such a situation.
+  if ('HTTP/' == substr($result->data, 0, 5)) {
     list($response, $result->data) = preg_split("/\r\n\r\n|\n\n|\r\r/", $result->data, 2);
   }
-  $response = preg_split("/\r\n|\n|\r/", $response);
 
+  $response = preg_split("/\r\n|\n|\r/", $response);
 
   // Parse the response status line.
   list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
