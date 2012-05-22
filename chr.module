@@ -111,7 +111,7 @@ function curl_http_request($url, array $options = array()) {
       CURLOPT_PROXYPORT => $proxy['port'],
     );
     // For the time being let's just support HTTP proxies with basic authentication.
-    if (isset($proxy['username']) && $proxy['password']) {
+    if (isset($proxy['username']) && isset($proxy['password'])) {
       $proxy_options += array(
         CURLOPT_PROXYUSERPWD => implode(':', array($proxy['username'], $proxy['password'])),
         CURLOPT_PROXYTYPE => CURLPROXY_HTTP,
