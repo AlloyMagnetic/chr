@@ -25,6 +25,7 @@
  *   - cookiefile: A string containing a local path to the cookie file.
  *   - http_proxy: An array that will override the system-wide HTTP proxy settings. Array's elements:
  *   - https_proxy: An array that will override the system-wide HTTPS proxy settings.
+ *   - curl_opts: An array of generic cURL options.
  * @return object
  *   An object that can have one or more of the following components:
  *   - request: A string containing the request body that was sent.
@@ -43,6 +44,7 @@
  *     HTTP header names are case-insensitive (RFC 2616, section 4.2), so for
  *     easy access the array keys are returned in lower case.
  *   - data: A string containing the response body that was received.
+ *   - 
  */
 function curl_http_request($url, array $options = array()) {
   $result = new stdClass();
@@ -341,3 +343,6 @@ function curl_http_request($url, array $options = array()) {
   curl_close($ch);
   return $result;
 }
+
+
+

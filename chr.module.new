@@ -1,0 +1,298 @@
+<?php
+
+/**
+ * @file
+ * Describe the file
+ *
+ * @author Mathew Winstone <mwinstone@coldfrontlabs.ca>
+ * @copyright 2012 Coldfront Labs Inc.
+ * @license Copyright (c) 2011 All rights reserved
+ */
+
+
+/**
+ * HTTP Request function using the cURL library
+ *
+ * Mimic the drupal_http_request function as much as possible
+ * so this can be used interchangeably.
+ *
+ * @param string $url
+ *  A string containing a fully qualified URI.
+ * @param array $options [optional]
+ *  An array that can have one or more of the following elements
+ *  - headers
+ *  - method
+ *  - data
+ *  - max_redirects
+ *  - timeout
+ *  - curl_opts
+ * @return object
+ *  Returns an object that can have one or more of the following components:
+ *  - request
+ *  - code
+ *  - protocol
+ *  - status_message
+ *  - redirect_code
+ *  - redirect_url
+ *  - error
+ *  - headers
+ *  - data
+ *  - curl_opts
+ */
+function restclient_curl_http_request($url, $options = array()) {
+  $result = new stdClass();
+
+  $uri = @parse_url($url);
+
+  if ($uri == FALSE) {
+    $result->error = 'unable to parse URL';
+    $result->code = -1001;
+    return $result;
+  }
+
+  if (!isset($uri['scheme'])) {
+    $result->error = 'missing schema';
+    $result->code = -1002;
+    return $result;
+  }
+
+  // @todo check the schema, if it's not valid set the proper error code
+  // @see drupal_http_request().
+  timer_start(__FUNCTION__);
+
+  // Merge the default options.
+  $options += array(
+    'headers' => array('User-Agent' => 'Drupal (+http://drupal.org/)'),
+    'method' => 'GET',
+    'data' => NULL,
+    'max_redirects' => 3,
+    'timeout' => 30.0,
+    'context' => NULL,
+    'curl_opts' => array(),
+  );
+
+  // Ensure there is a User-Agent value
+  if (empty($options['headers']['User-Agent'])) {
+    $options['headers']['User-Agent'] = 'Drupal (+http://drupal.org/)';
+  }
+
+  // Build the cURL object
+  $ch = curl_init($url);
+
+  // Select the scheme
+  // @todo
+
+  // Set port settings
+  if (!empty($uri['port'])) {
+    curl_setopt($ch, CURLOPT_PORT, $uri['port']);
+  }
+
+  // User Agent
+  curl_setopt($ch, CURLOPT_USERAGENT, $options['headers']['User-Agent']);
+  unset( $options['headers']['User-Agent']);
+
+  // Connection Timeout
+  curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $options['timeout']);
+
+  // Execution Timeout
+  curl_setopt($ch, CURLOPT_TIMEOUT, $options['timeout']);
+
+  $attach_headers = array();
+  foreach ($options['headers'] as $header_key => $header_value) {
+    $attach_headers[] = "$header_key: $header_value";
+  }
+
+  curl_setopt($ch, CURLOPT_HTTPHEADER, $attach_headers);
+
+  // Set the request type and any additional setop values as needed
+  _restclient_curl_request_type_option($options, $ch);
+
+  // Set any extra cURL options
+  foreach($options['curl_opts'] as $opt => $value) {
+    $set = curl_setopt($ch, $opt, $value);
+    if (FALSE === $set) {
+      watchdog('restclient', 'Unable to set cURL option @opt : @value', array('@opt' => $opt, '@value' => $value), WATCHDOG_ERROR);
+    }
+  }
+
+  // Force some options to be set by default and prevent them from
+  // being overriden
+
+  // Add the response header to the response data
+  curl_setopt($ch, CURLOPT_HEADER, TRUE);
+
+  // Add the request header to the response data
+  curl_setopt($ch, CURLINFO_HEADER_OUT, TRUE);
+
+  // Ensure the data is included in the response
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+
+  // Attempt the connection
+  $response = curl_exec($ch);
+
+  // Get Response Info
+  $info = curl_getinfo($ch);
+
+  // Close the connection
+  curl_close($ch);
+
+  // Split the headers from the body values
+  $body = drupal_substr($response, $info['header_size']);
+  $headers = drupal_substr($response, 0, $info['header_size']);
+
+  // Add the request header to the result object
+  $result->request = $info['request_header'];
+
+  // For NTLM requests:
+  // Since NTLM responses contain multiple header sections, we must parse them
+  // differently than standard response data
+  if (isset($options['curl_opts'][CURLOPT_HTTPAUTH]) && $options['curl_opts'][CURLOPT_HTTPAUTH] & CURLAUTH_NTLM) {
+  // @todo don't need right now, fix later
+  //  $result->ntlm_response = _restclient_parse_ntlm_response($headers);
+  }
+
+  // Parse response headers from the response body.
+  $response = preg_split("/\r\n|\n|\r/", $headers);
+
+  // Parse the response status line.
+  list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
+  $result->protocol = $protocol;
+  $result->status_message = $status_message;
+
+  $result->headers = array();
+  // Parse the response headers.
+  while ($line = trim(array_shift($response))) {
+    list($name, $value) = explode(':', $line, 2);
+    $name = strtolower($name);
+    if (isset($result->headers[$name]) && $name == 'set-cookie') {
+      // RFC 2109: the Set-Cookie response header comprises the token Set-
+      // Cookie:, followed by a comma-separated list of one or more cookies.
+      $result->headers[$name] .= ',' . trim($value);
+    }
+    else {
+      $result->headers[$name] = trim($value);
+    }
+  }
+
+  // Set the result data
+  $result->data = $body;
+
+  $responses = array(
+    100 => 'Continue',
+    101 => 'Switching Protocols',
+    200 => 'OK',
+    201 => 'Created',
+    202 => 'Accepted',
+    203 => 'Non-Authoritative Information',
+    204 => 'No Content',
+    205 => 'Reset Content',
+    206 => 'Partial Content',
+    300 => 'Multiple Choices',
+    301 => 'Moved Permanently',
+    302 => 'Found',
+    303 => 'See Other',
+    304 => 'Not Modified',
+    305 => 'Use Proxy',
+    307 => 'Temporary Redirect',
+    400 => 'Bad Request',
+    401 => 'Unauthorized',
+    402 => 'Payment Required',
+    403 => 'Forbidden',
+    404 => 'Not Found',
+    405 => 'Method Not Allowed',
+    406 => 'Not Acceptable',
+    407 => 'Proxy Authentication Required',
+    408 => 'Request Time-out',
+    409 => 'Conflict',
+    410 => 'Gone',
+    411 => 'Length Required',
+    412 => 'Precondition Failed',
+    413 => 'Request Entity Too Large',
+    414 => 'Request-URI Too Large',
+    415 => 'Unsupported Media Type',
+    416 => 'Requested range not satisfiable',
+    417 => 'Expectation Failed',
+    500 => 'Internal Server Error',
+    501 => 'Not Implemented',
+    502 => 'Bad Gateway',
+    503 => 'Service Unavailable',
+    504 => 'Gateway Time-out',
+    505 => 'HTTP Version not supported',
+  );
+
+  // Set the response code
+  $result->code = $info['http_code'];
+
+  // RFC 2616 states that all unknown HTTP codes must be treated the same as the
+  // base code in their class.
+  if (!isset($responses[$info['http_code']])) {
+    $result->code = floor($code / 100) * 100;
+  }
+
+
+  switch ($result->code) {
+    case 200: // OK
+    case 304: // Not modified
+      break;
+    case 301: // Moved permanently
+    case 302: // Moved temporarily
+    case 307: // Moved temporarily
+      $location = $result->headers['location'];
+      $options['timeout'] -= timer_read(__FUNCTION__) / 1000;
+      if ($options['timeout'] <= 0) {
+        $result->code = HTTP_REQUEST_TIMEOUT;
+        $result->error = 'request timed out';
+      }
+      elseif ($options['max_redirects']) {
+        // Redirect to the new location.
+        $options['max_redirects']--;
+        $result = restclient_curl_http_request($location, $options);
+        $result->redirect_code = $code;
+      }
+      if (!isset($result->redirect_url)) {
+        $result->redirect_url = $location;
+      }
+      break;
+    default:
+      $result->error = $status_message;
+  }
+
+  // Lastly, include any cURL specific information
+  $result->curl_info = $info;
+
+  return $result;
+}
+
+/**
+ * Convert the string name of the request type to
+ * a cURL opt value
+ *
+ * @param string $method
+ *  String name of the method
+ * @return integer
+ *   Returns the cURL option, CURLOPT_HTTPGET
+ */
+function _restclient_curl_request_type_option(&$options, &$ch) {
+  switch(drupal_strtoupper($options['method'])) {
+    // @todo add the list of the request type
+    case 'POST':
+      // Assign the data to the proper cURL option
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $options['data']);
+
+      if (isset($options['multipart']) && TRUE === $options['multipart']) {
+        // Do nothing for now
+      }
+      else {
+        curl_setopt($ch, CURLOPT_POST, TRUE);
+      }
+    break;
+    case 'PUT':
+      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+      // Assign the data to the proper cURL option
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $options['data']);
+      
+    case 'GET':
+    default:
+      // Do nothing
+  }
+}
