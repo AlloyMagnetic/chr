@@ -90,8 +90,23 @@ function curl_http_request($url, array $options = array()) {
     $proxy = NULL;
   }
 
+  // If the database prefix is being used by SimpleTest to run the tests in a copied
+  // database then set the user-agent header to the database prefix so that any
+  // calls to other Drupal pages will run the SimpleTest prefixed database. The
+  // user-agent is used to ensure that multiple testing sessions running at the
+  // same time won't interfere with each other as they would if the database
+  // prefix were stored statically in a file or database variable.
+  $test_info = &$GLOBALS['drupal_test_info'];
+  if (!empty($test_info['test_run_id'])) {
+    $options['headers']['User-Agent'] = drupal_generate_test_ua($test_info['test_run_id']);
+  }
+  elseif (empty($options['headers']['User-Agent']) {
+    $options['headers']['User-Agent'] = 'Drupal (+http://drupal.org/)';
+  }
+
   $curl_opt = array(
     CURLOPT_HEADER => TRUE,
+    CURLOPT_USERAGENT => $options['headers']['User-Agent'],
     CURLINFO_HEADER_OUT => TRUE,
     CURLOPT_TIMEOUT => $options['timeout'],
     CURLOPT_CONNECTTIMEOUT => $options['timeout'],
@@ -101,6 +116,9 @@ function curl_http_request($url, array $options = array()) {
     CURLOPT_SSL_VERIFYHOST => $options['verify_ssl'],
     CURLOPT_MAXREDIRS => $options['max_redirects'],
   );
+
+  // Remove the user agent from the headers as it is already set
+  unset( $options['headers']['User-Agent']);
 
   if ($options['cookiefile']) {
     $curl_opt += array(
@@ -146,11 +164,6 @@ function curl_http_request($url, array $options = array()) {
     return $result;
   }
 
-  // Merge the default headers.
-  $options['headers'] += array(
-    'User-Agent' => 'Drupal (+http://drupal.org/)',
-  );
-
   // Only add Content-Length if we actually have any content or if it is a POST
   // or PUT request. Some non-standard servers get confused by Content-Length in
   // at least HEAD/GET requests, and Squid always requires Content-Length in
@@ -164,17 +177,6 @@ function curl_http_request($url, array $options = array()) {
   if (isset($uri['user'])) {
     $options['headers']['Authorization'] = 'Basic ' . base64_encode($uri['user'] . (isset($uri['pass']) ?
       ':' . $uri['pass'] : ''));
-  }
-
-  // If the database prefix is being used by SimpleTest to run the tests in a copied
-  // database then set the user-agent header to the database prefix so that any
-  // calls to other Drupal pages will run the SimpleTest prefixed database. The
-  // user-agent is used to ensure that multiple testing sessions running at the
-  // same time won't interfere with each other as they would if the database
-  // prefix were stored statically in a file or database variable.
-  $test_info = &$GLOBALS['drupal_test_info'];
-  if (!empty($test_info['test_run_id'])) {
-    $options['headers']['User-Agent'] = drupal_generate_test_ua($test_info['test_run_id']);
   }
 
   // Set all the headers.
