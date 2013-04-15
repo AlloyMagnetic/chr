@@ -44,7 +44,7 @@
  *     HTTP header names are case-insensitive (RFC 2616, section 4.2), so for
  *     easy access the array keys are returned in lower case.
  *   - data: A string containing the response body that was received.
- *   - 
+ *   - curl_opts: An array of curl options used
  */
 function curl_http_request($url, array $options = array()) {
   $result = new stdClass();
@@ -79,6 +79,7 @@ function curl_http_request($url, array $options = array()) {
     'cookiefile' => NULL,
     'http_proxy' => variable_get('http_proxy'),
     'https_proxy' => variable_get('https_proxy'),
+    'curl_opts' => array(),
   );
 
   // Select the right proxy for the right protocol.
@@ -93,6 +94,7 @@ function curl_http_request($url, array $options = array()) {
     CURLOPT_HEADER => TRUE,
     CURLINFO_HEADER_OUT => TRUE,
     CURLOPT_TIMEOUT => $options['timeout'],
+    CURLOPT_CONNECTTIMEOUT => $options['timeout'],
     CURLOPT_FOLLOWLOCATION => TRUE,
     CURLOPT_RETURNTRANSFER => TRUE,
     CURLOPT_SSL_VERIFYPEER => $options['verify_ssl'],
