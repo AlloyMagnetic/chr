@@ -14,6 +14,8 @@ function chr_admin_settings_form($form, &$form_state) {
   $form['chr_override_drupal_http_request'] = array(
     '#type' => 'checkbox',
     '#title' => t('Override Drupal HTTP Request'),
+    '#description' => t('Set all HTTP requests to use cURL instead. Requires Drupal 7.21 or higher.'),
+    '#disabled' => !(VERSION >= 7.21),
     '#default_value' => variable_get('chr_override_drupal_http_request', FALSE),
   );
   

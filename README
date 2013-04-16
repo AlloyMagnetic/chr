@@ -7,6 +7,9 @@ The function chr_curl_http_request() is an alternative implementation of Drupal 
 cURL. The function intends to be backwards compatible with drupal_http_request(), by accepting the same parameters
 in the same form and by returning the response in the same format.
 
+Override default http request function (Drupal 7.21 or higher)
+--------------------------------------------------------------
+
 You can set Drupal to use this function as the default request method by setting the following in your settings.php file
 
 ````
