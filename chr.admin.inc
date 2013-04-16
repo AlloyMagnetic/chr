@@ -9,6 +9,8 @@
  * Form settings array
  */
 function chr_admin_settings_form($form, &$form_state) {
+  $form['#access'] = array('administer chr');
+  
   $form['chr_override_drupal_http_request'] = array(
     '#type' => 'checkbox',
     '#title' => t('Override Drupal HTTP Request'),
