@@ -384,8 +384,9 @@ function _chr_curl_set_proxy_settings(&$options, &$ch, &$uri) {
  *  cURL Object
  */
 function _chr_curl_set_headers(&$options, &$ch) {
-  foreach ($options['headers'] as $name => $value) {
-    curl_setopt($ch, CURLOPT_HTTPHEADER, trim($name) . ': ' . trim($value));
+  if (is_array($options['headers']) and !empty($options['headers'])) {
+    array_walk($options['headers'], 'trim');
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $options['headers']);    
   }
 }
 
