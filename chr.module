@@ -32,14 +32,6 @@ function chr_permission() {
 }
 
 /**
- * Implements hook_uninstall().
- */
-function chr_uninstall() {
-  variable_del('chr_debug');
-  variable_del('chr_override_drupal_http_request');
-}
-
-/**
  * Legacy wrapper callback
  */
 function curl_http_request($url, array $options = array()) {
