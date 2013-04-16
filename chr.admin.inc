@@ -21,7 +21,8 @@ function chr_admin_settings_form($form, &$form_state) {
   
   $form['chr_debug'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Enable Debug Mode'),
+    '#title' => t('Enable Debug Output'),
+    '#description' => t('Display all HTTP requests/response objects via Devel.'),
     '#default_value' => variable_get('chr_debug'),
     '#access' => module_exists('devel'),
   );
