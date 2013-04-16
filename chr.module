@@ -9,7 +9,7 @@
  * Implements hook_menu().
  */
 function chr_menu() {
-  $items['admin/config/services'] = array(
+  $items['admin/config/services/chr'] = array(
     'title' => 'cURL HTTP Request',
     'page arguments' => array('chr_admin_settings_form'),
     'access arguments' => array('administer chr'),
