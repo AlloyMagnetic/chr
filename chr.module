@@ -150,7 +150,7 @@ function chr_curl_http_request($url, array $options = array()) {
   _chr_curl_set_cookie_settings($options, $ch);
   
   // Set the port
-  $success = _chr_curl_set_port($options, $ch);
+  $success = _chr_curl_set_port($options, $ch, $uri);
 
   if (FALSE === $success) {
     $result->error = 'invalid schema ' . $uri['scheme'];
