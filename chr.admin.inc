@@ -24,6 +24,8 @@ function chr_admin_settings_form($form, &$form_state) {
     '#access' => module_exists('devel'),
   );
 
+  // @todo add proxy settings (see README)
+
   $form['#submit'][] = 'chr_admin_settings_form_submit';
 
   return system_settings_form($form);
