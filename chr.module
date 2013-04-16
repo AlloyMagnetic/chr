@@ -11,6 +11,8 @@
 function chr_menu() {
   $items['admin/config/services/chr'] = array(
     'title' => 'cURL HTTP Request',
+    'description' => 'Configure cURL HTTP Request settings',
+    'page callback' => 'drupal_get_form',
     'page arguments' => array('chr_admin_settings_form'),
     'access arguments' => array('administer chr'),
     'file' => 'chr.admin.inc',
