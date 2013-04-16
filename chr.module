@@ -294,6 +294,11 @@ function chr_curl_http_request($url, array $options = array()) {
   // Lastly, include any cURL specific information
   $result->curl_info = $info;
 
+  // Debug output
+  if (variable_get('chr_debug', FALSE) and module_exists('devel')) {
+    dpm($result);
+  }
+
   return $result;
 }
 
