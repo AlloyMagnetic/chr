@@ -16,8 +16,6 @@ function chr_enable() {
  }
 }
 
-
-
 /**
  * Implements hook_disable().
  */
