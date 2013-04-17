@@ -219,6 +219,14 @@ function chr_curl_http_request($url, array $options = array()) {
   // Close the connection
   curl_close($ch);
 
+  // For NTLM requests:
+  // Since NTLM responses contain multiple header sections, we must parse them
+  // differently than standard response data
+  if (isset($options['curl_opts'][CURLOPT_HTTPAUTH]) && $options['curl_opts'][CURLOPT_HTTPAUTH] & CURLAUTH_NTLM) {
+  // @todo don't need right now, fix later
+  //  $result->ntlm_response = _chr_curl_parse_ntlm_response($headers);
+  }
+
   // Parse response headers from the response body.
   // Be tolerant of malformed HTTP responses that separate header and body with
   // \n\n or \r\r instead of \r\n\r\n.
@@ -494,6 +502,7 @@ function _chr_curl_set_port(&$options, &$ch, &$uri) {
 
 /**
  * Set default cookie settings
+ *
  * @param array $options [reference]
  *  Options array
  * @param object $ch [reference]
@@ -506,6 +515,63 @@ function _chr_curl_set_cookie_settings(&$options, &$ch) {
     curl_setopt($ch, CURLOPT_COOKIEFILE, $options['cookiefile']);
   }
 }
+
+/**
+ * Parse NTLM requests
+ *
+ * @param array $options [reference]
+ *  Options array
+ * @param object $ch [reference]
+ *  cURL Object 
+ *//*
+function _chr_curl_parse_ntlm_response(&$options, &$ch) {
+  // @todo Rework this flow as it currently doesn't work
+
+  $ntlm = FALSE;
+  $result = new stdClass();
+
+  // Until we verify that the NTLM header is present, we leave the original
+  // variable untouched
+  $temp = $data;
+
+  // Parse response headers from the response body.
+  // Be tolerant of malformed HTTP responses that separate header and body with
+  // \n\n or \r\r instead of \r\n\r\n.
+  list($response, $temp) = preg_split("/\r\n\r\n|\n\n|\r\r/", $temp, 2);
+  $response = preg_split("/\r\n|\n|\r/", $response);
+
+  // Check that the NTLM header is present
+  foreach($response as $header) {
+    if (FALSE !== stripos($header, 'WWW-AUTHENTICATE: NTLM')) {
+      $ntlm = TRUE;
+    }
+  }
+
+  if ($ntlm) {
+    // Parse the response status line.
+    list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
+    $result->protocol = $protocol;
+    $result->status_message = $status_message;
+
+    $result->headers = array();
+
+    // Parse the response headers.
+    while ($line = trim(array_shift($response))) {
+      list($name, $value) = explode(':', $line, 2);
+      $name = strtolower($name);
+      if (isset($result->headers[$name]) && $name == 'set-cookie') {
+        // RFC 2109: the Set-Cookie response header comprises the token Set-
+        // Cookie:, followed by a comma-separated list of one or more cookies.
+        $result->headers[$name] .= ',' . trim($value);
+      }
+      else {
+        $result->headers[$name] = trim($value);
+      }
+    }
+    $data = $temp;
+  }
+  return $result;
+}//*/
 
 /**
  * List of response codes
