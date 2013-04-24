@@ -192,20 +192,20 @@ function chr_curl_http_request($url, array $options = array()) {
   $result->data = trim(curl_exec($ch));
 
   // Check for errors
-  $result->error = curl_error($ch);
   $result->errno = curl_errno($ch);
 
   // Get Response Info
   $info = curl_getinfo($ch);
 
   // If there's been an error, do not continue.
-  if ($result->error) {
+  if ($result->errno) {
     // Request timed out.
     if (CURLE_OPERATION_TIMEOUTED == $result->errno) {
       $result->code = HTTP_REQUEST_TIMEOUT;
       $result->error = 'request timed out';
       return $result;
     }
+    $result->error = curl_error($ch);
     $result->code = $result->errno;
     return $result;
   }
