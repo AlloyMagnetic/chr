@@ -460,6 +460,7 @@ function _chr_curl_request_type_option(&$options, &$ch) {
     break;
     case 'HEAD':
       curl_setopt($ch, CURLOPT_NOBODY, TRUE);
+      $valid_method = TRUE;
     break;
     default:
       return $valid_method;
