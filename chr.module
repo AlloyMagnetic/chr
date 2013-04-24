@@ -158,6 +158,15 @@ function chr_curl_http_request($url, array $options = array()) {
     return $result;
   }
 
+  // Set request options
+  $success = _chr_curl_request_type_option($options, $ch);
+
+  if (FALSE === $success) {
+    $result->error = 'invalid method ' . $options['method'];
+    $result->code = -1004;
+    return $result;
+  }
+
   // Only add Content-Length if we actually have any content or if it is a POST
   // or PUT request. Some non-standard servers get confused by Content-Length in
   // at least HEAD/GET requests, and Squid always requires Content-Length in
@@ -181,15 +190,6 @@ function chr_curl_http_request($url, array $options = array()) {
 
   // Set headers
   _chr_curl_set_headers($options, $ch);
-
-  // Set request options
-  $success = _chr_curl_request_type_option($options, $ch);
-
-  if (FALSE === $success) {
-    $result->error = 'invalid method ' . $options['method'];
-    $result->code = -1004;
-    return $result;
-  }
 
   // Set any last minute options
   _chr_curl_set_options($options, $ch);
