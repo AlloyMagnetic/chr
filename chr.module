@@ -125,7 +125,7 @@ function chr_curl_http_request($url, array $options = array()) {
 
   // Initialize cURL object
   $ch = curl_init($url);
- 
+
   // Set the proxy settings
   _chr_curl_set_proxy_settings($options, $ch, $uri);
 
@@ -148,7 +148,7 @@ function chr_curl_http_request($url, array $options = array()) {
 
   // Set cookie settings
   _chr_curl_set_cookie_settings($options, $ch);
-  
+
   // Set the port
   $success = _chr_curl_set_port($options, $ch, $uri);
 
@@ -175,10 +175,10 @@ function chr_curl_http_request($url, array $options = array()) {
 
   // Set headers
   _chr_curl_set_headers($options, $ch);
-  
+
   // Set request options
   $success = _chr_curl_request_type_option($options, $ch);
-  
+
   if (FALSE === $success) {
     $result->error = 'invalid method ' . $options['method'];
     $result->code = -1004;
@@ -190,7 +190,7 @@ function chr_curl_http_request($url, array $options = array()) {
 
   // Make request
   $result->data = trim(curl_exec($ch));
-  
+
   // Check for errors
   $result->error = curl_error($ch);
   $result->errno = curl_errno($ch);
@@ -264,7 +264,7 @@ function chr_curl_http_request($url, array $options = array()) {
   }
 
   $responses = chr_response_codes();
-  
+
   // RFC 2616 states that all unknown HTTP codes must be treated the same as the
   // base code in their class.
   if (!isset($responses[$code])) {
@@ -370,7 +370,7 @@ function _chr_curl_set_proxy_settings(&$options, &$ch, &$uri) {
   if ((!empty($proxy['exceptions'])) && (array_key_exists($uri['host'], $proxy['exceptions']))) {
     $proxy = NULL;
   }
-  
+
   if (!empty($proxy)) {
     curl_setopt($ch, CURLOPT_PROXY, $proxy['server']);
     curl_setopt($ch, CURLOPT_PROXYPORT, $proxy['port']);
@@ -397,7 +397,7 @@ function _chr_curl_set_headers(&$options, &$ch) {
     foreach ($options['headers'] as $key => $value) {
       $headers[] = trim($key) . ": " . trim($value);
     }
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);    
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
   }
 }
 
@@ -416,8 +416,24 @@ function _chr_curl_set_headers(&$options, &$ch) {
 function _chr_curl_request_type_option(&$options, &$ch) {
   $valid_method = FALSE;
   switch(drupal_strtoupper($options['method'])) {
-    // @todo add the list of the request type
-    // DELETE, OPTION
+    case 'DELETE':
+      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+      $valid_method = TRUE;
+    break;
+    case 'OPTIONS':
+      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'OPTIONS');
+      $valid_method = TRUE;
+    break;
+    case: 'TRACE':
+      curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'TRACE');
+      $valid_method = TRUE;
+    break;
+    case 'CONNECT':
+      // @todo
+    break;
+    case 'PATCH':
+      // @todo
+    break;
     case 'POST':
       // Assign the data to the proper cURL option
       curl_setopt($ch, CURLOPT_POSTFIELDS, $options['data']);
@@ -449,7 +465,7 @@ function _chr_curl_request_type_option(&$options, &$ch) {
       return $valid_method;
   }
 }
-  
+
   // Set the request method.
   /*
   switch ($options['method']) {
@@ -498,7 +514,7 @@ function _chr_curl_set_port(&$options, &$ch, &$uri) {
     // We don't add the standard port to prevent from breaking rewrite rules
     // checking the host that do not take into account the port number.
     $options['headers']['Host'] = $uri['host'] . ($uri['port'] != 80 ? ':' . $uri['port'] : '');
-    
+
     return TRUE;
   }
   else {
@@ -512,7 +528,7 @@ function _chr_curl_set_port(&$options, &$ch, &$uri) {
  * @param array $options [reference]
  *  Options array
  * @param object $ch [reference]
- *  cURL Object 
+ *  cURL Object
  */
 function _chr_curl_set_cookie_settings(&$options, &$ch) {
   // Set cookie settings
@@ -528,7 +544,7 @@ function _chr_curl_set_cookie_settings(&$options, &$ch) {
  * @param array $options [reference]
  *  Options array
  * @param object $ch [reference]
- *  cURL Object 
+ *  cURL Object
  *//*
 function _chr_curl_parse_ntlm_response(&$options, &$ch) {
   // @todo Rework this flow as it currently doesn't work
