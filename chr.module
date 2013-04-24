@@ -162,11 +162,17 @@ function chr_curl_http_request($url, array $options = array()) {
   // or PUT request. Some non-standard servers get confused by Content-Length in
   // at least HEAD/GET requests, and Squid always requires Content-Length in
   // POST/PUT requests.
-  $content_length = strlen($options['data']);
-  if ($content_length > 0 || $options['method'] == 'POST' || $options['method'] == 'PUT') {
-    $options['headers']['Content-Length'] = $content_length;
+  if (is_string($options['data'])) {
+    $content_length = strlen($options['data']);
+    if ($content_length > 0 || $options['method'] == 'POST' || $options['method'] == 'PUT') {
+      $options['headers']['Content-Length'] = $content_length;
+    }
   }
-
+  else {
+    $result->error = 'invalid post data. string values only.';
+    $result->code = -1004; // @todo determine the right code to use here...
+    return $result;    
+  }
   // If the server URL has a user then attempt to use basic authentication.
   if (isset($uri['user'])) {
     $options['headers']['Authorization'] = 'Basic ' . base64_encode($uri['user'] . (isset($uri['pass']) ?
@@ -449,7 +455,6 @@ function _chr_curl_request_type_option(&$options, &$ch) {
     case 'PUT':
       // Assign the data to the proper cURL option
       curl_setopt($ch, CURLOPT_POSTFIELDS, $options['data']);
-      curl_setopt($ch, CURLOPT_PUT, TRUE);
       curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
       curl_setopt($ch, CURLOPT_HTTPHEADER, array('X-HTTP-Method-Override: PUT'));
       $valid_method = TRUE;
@@ -466,26 +471,6 @@ function _chr_curl_request_type_option(&$options, &$ch) {
       return $valid_method;
   }
 }
-
-  // Set the request method.
-  /*
-  switch ($options['method']) {
-    case 'POST':
-      $curl_opt[CURLOPT_POST] = TRUE;
-      if (!empty($options['data'])) {
-        $curl_opt[CURLOPT_POSTFIELDS] = drupal_http_build_query($options['data']);
-      }
-      break;
-    case 'PUT':
-      $curl_opt[CURLOPT_PUT] = TRUE;
-      break;
-    default:
-      $result->error = 'invalid method ' . $options['method'];
-      $result->code = -1004;
-      return $result;
-  }
-}
-*/
 
 /**
  * Set port options
