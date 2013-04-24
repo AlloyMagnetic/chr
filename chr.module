@@ -393,8 +393,11 @@ function _chr_curl_set_proxy_settings(&$options, &$ch, &$uri) {
  */
 function _chr_curl_set_headers(&$options, &$ch) {
   if (is_array($options['headers']) and !empty($options['headers'])) {
-    array_walk($options['headers'], 'trim');
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $options['headers']);    
+    $headers = array();
+    foreach ($options['headers'] as $key => $value) {
+      $headers[] = trim($key) . ": " . trim($value);
+    }
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);    
   }
 }
 
