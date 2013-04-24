@@ -424,7 +424,7 @@ function _chr_curl_request_type_option(&$options, &$ch) {
       curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'OPTIONS');
       $valid_method = TRUE;
     break;
-    case: 'TRACE':
+    case 'TRACE':
       curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'TRACE');
       $valid_method = TRUE;
     break;
