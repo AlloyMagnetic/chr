@@ -173,7 +173,7 @@ function chr_curl_http_request($url, array $options = array()) {
   // POST/PUT requests.
   if (!empty($options['data']) and is_string($options['data']) and in_array($options['method'], array('POST', 'PUT'))) {
     $content_length = strlen($options['data']);
-    if ($content_length > 0 || $options['method'] == 'POST' || $options['method'] == 'PUT') {
+    if ($content_length > 0) {
       $options['headers']['Content-Length'] = $content_length;
     }
   }
@@ -182,6 +182,7 @@ function chr_curl_http_request($url, array $options = array()) {
     $result->code = -1004; // @todo determine the right code to use here...
     return $result;    
   }
+
   // If the server URL has a user then attempt to use basic authentication.
   if (isset($uri['user'])) {
     $options['headers']['Authorization'] = 'Basic ' . base64_encode($uri['user'] . (isset($uri['pass']) ?
