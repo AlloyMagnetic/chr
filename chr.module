@@ -171,17 +171,18 @@ function chr_curl_http_request($url, array $options = array()) {
   // or PUT request. Some non-standard servers get confused by Content-Length in
   // at least HEAD/GET requests, and Squid always requires Content-Length in
   // POST/PUT requests.
-  dpm($options);
-  if (!empty($options['data']) and is_string($options['data'])) {
-    $content_length = strlen($options['data']);
-    if ($content_length > 0) {
-      $options['headers']['Content-Length'] = $content_length;
+  if (!empty($options['data'])) {
+    if (is_string($options['data']) and in_array($options['method'], array('POST', 'PUT'))) {
+      $content_length = strlen($options['data']);
+      if ($content_length > 0) {
+        $options['headers']['Content-Length'] = $content_length;
+      }
     }
-  }
-  else {
-    $result->error = 'invalid post data. string values only.';
-    $result->code = -1004; // @todo determine the right code to use here...
-    return $result;
+    else {
+      $result->error = 'invalid post data. string values only.';
+      $result->code = -1004; // @todo determine the right code to use here...
+      return $result;
+    }
   }
 
   // If the server URL has a user then attempt to use basic authentication.
