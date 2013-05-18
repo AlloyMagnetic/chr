@@ -445,7 +445,8 @@ function _chr_curl_request_type_option(&$options, &$ch) {
     break;
     case 'POST':
       // Assign the data to the proper cURL option
-      curl_setopt($ch, CURLOPT_POSTFIELDS, $options['data']);
+      $data = is_array($options['data']) ? drupal_http_build_query($options['data']) : $options['data'];
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
       if (isset($options['multipart']) && TRUE === $options['multipart']) {
         // Do nothing for now
@@ -456,8 +457,9 @@ function _chr_curl_request_type_option(&$options, &$ch) {
       $valid_method = TRUE;
     break;
     case 'PUT':
+      $data = is_array($options['data']) ? drupal_http_build_query($options['data']) : $options['data'];
       // Assign the data to the proper cURL option
-      curl_setopt($ch, CURLOPT_POSTFIELDS, $options['data']);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
       curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
       curl_setopt($ch, CURLOPT_HTTPHEADER, array('X-HTTP-Method-Override: PUT'));
       $valid_method = TRUE;
