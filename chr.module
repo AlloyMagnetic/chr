@@ -376,7 +376,7 @@ function _chr_curl_set_proxy_settings(&$options, &$ch, &$uri) {
   $proxy = ('https' == $uri['scheme']) ? $options['https_proxy'] : $options['http_proxy'];
 
   // Nullify the proxy if the host to send the request to is part of the proxy's exceptions.
-  if ((!empty($proxy['exceptions'])) && (array_key_exists($uri['host'], $proxy['exceptions']))) {
+  if ((!empty($proxy['exceptions'])) && (in_array($uri['host'], $proxy['exceptions']))) {
     $proxy = NULL;
   }
 
