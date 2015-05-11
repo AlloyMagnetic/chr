@@ -513,32 +513,32 @@ function _chr_curl_set_cookie_settings(&$options, &$ch) {
 /**
  * Get proxy settings for CHR.
  * @param string $proxy
- *  The name proxy setting variable to retrieve.
+ *  The name of proxy setting variable to retrieve.
  * @return
  *  The proxy setting variable to retrieve.
  */
 function _chr_get_proxy_variable($proxy) {
+  // Attempt to retrieve $proxy_var, which could either 
+  // be 'http_proxy' or 'https_proxy'.
   $proxy_var = variable_get($proxy);
 
-  // $proxy_var could be either 'http_proxy' or 'https_proxy'
-  // If the requested one hasn't been found, let's try and work it out based
-  // on other variables.
-
+  // If the requested $proxy_var hasn't been found, 
+  // let's try and work it out based on other variables.
   if (empty($proxy_var)) {
     switch ($proxy) {
-      // If the HTTPS proxy was requested and wasn't found, let's assume
-      // to use the same proxy for both HTTP and HTTPS.
+      // Let's always assume to fall back on the HTTP proxy settings whenever
+      // HTTPS proxy settings are not found. 
       case 'https_proxy': {
-        // First, let's try and see if the 'http_proxy' variable used by CHR
-        // is set. If so, let's just use that to for 'https_proxy'.
+        // The first attempt is to see if the CHR-specific HTTP settings have 
+        // been set. If so, let's just use that to for 'https_proxy'.
         if ($proxy_var = variable_get('http_proxy')) {
-          return $proxy_var;
+          break;
         }
         // If 'http_proxy' wasn't set, let's fall through to the next case,
         // so that we try and fall back on Drupal standard proxy
         // settings for HTTP. Therefore, no 'break' required here.
       }
-      case 'http_proxy':
+      case 'http_proxy': {
         // If a proxy server is set in Drupal, start building an 'http_proxy'
         // setting in the format expected by CHR.
         if ($proxy_server = variable_get('proxy_server')) {
@@ -557,11 +557,13 @@ function _chr_get_proxy_variable($proxy) {
             $proxy_var['exceptions'] = $proxy_exceptions;
           }
         }
-        // If a server wasn't set, $proxy_var remains NULL.
-        // Either way, return $proxy_var.
-        return $proxy_var;
+        break;
+      }
     }
   }
+  // If a server wasn't set, $proxy_var remains NULL.
+  // Either way, return $proxy_var.
+  return $proxy_var;
 }
 
 /**
