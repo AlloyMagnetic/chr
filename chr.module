@@ -285,7 +285,7 @@ function chr_curl_http_request($url, array $options = array()) {
       elseif ($options['max_redirects']) {
         // Redirect to the new location.
         $options['max_redirects']--;
-        $result = curl_http_request($location, $options);
+        $result = chr_curl_http_request($location, $options);
         $result->redirect_code = $code;
       }
       if (!isset($result->redirect_url)) {
@@ -524,18 +524,18 @@ function _chr_curl_set_cookie_settings(&$options, &$ch) {
  *  The proxy setting variable to retrieve.
  */
 function _chr_get_proxy_variable($proxy) {
-  // Attempt to retrieve $proxy_var, which could either 
+  // Attempt to retrieve $proxy_var, which could either
   // be 'http_proxy' or 'https_proxy'.
   $proxy_var = variable_get($proxy);
 
-  // If the requested $proxy_var hasn't been found, 
+  // If the requested $proxy_var hasn't been found,
   // let's try and work it out based on other variables.
   if (empty($proxy_var)) {
     switch ($proxy) {
       // Let's always assume to fall back on the HTTP proxy settings whenever
-      // HTTPS proxy settings are not found. 
+      // HTTPS proxy settings are not found.
       case 'https_proxy': {
-        // The first attempt is to see if the CHR-specific HTTP settings have 
+        // The first attempt is to see if the CHR-specific HTTP settings have
         // been set. If so, let's just use that to for 'https_proxy'.
         if ($proxy_var = variable_get('http_proxy')) {
           break;
