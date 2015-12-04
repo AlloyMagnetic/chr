@@ -567,6 +567,17 @@ function _chr_get_proxy_variable($proxy) {
       }
     }
   }
+  $drupal_proxy_server = variable_get('proxy_server');
+  if (empty($proxy_var) and isset($drupal_proxy_server)) {
+    $proxy_var = array(
+      'server'     => $drupal_proxy_server,
+      'port'       => variable_get('proxy_port'),
+      'username'   => variable_get('proxy_username'),
+      'password'   => variable_get('proxy_password'),
+      'exceptions' => variable_get('proxy_exceptions'),
+    );
+    $proxy_var = array_filter($proxy_var);
+  }
   // If a server wasn't set, $proxy_var remains NULL.
   // Either way, return $proxy_var.
   return $proxy_var;
