@@ -488,10 +488,12 @@ function _chr_curl_set_port(&$options, &$ch, &$uri) {
     if (!isset($uri['port'])) {
       $uri['port'] = $default_ports[$uri['scheme']];
     }
-    // RFC 2616: "non-standard ports MUST, default ports MAY be included".
-    // We don't add the standard port to prevent from breaking rewrite rules
-    // checking the host that do not take into account the port number.
-    $options['headers']['Host'] = $uri['host'] . ($uri['port'] != 80 ? ':' . $uri['port'] : '');
+    if (!isset($options['headers']['Host'])) {
+      // RFC 2616: "non-standard ports MUST, default ports MAY be included".
+      // We don't add the standard port to prevent from breaking rewrite rules
+      // checking the host that do not take into account the port number.
+      $options['headers']['Host'] = $uri['host'] . ($uri['port'] != 80 ? ':' . $uri['port'] : '');
+    }
 
     return TRUE;
   }
